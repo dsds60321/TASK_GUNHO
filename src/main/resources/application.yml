@@ -1,1 +1,60 @@
-spring.application.name=api
+server:
+  port: 8081
+
+logging:
+  level:
+    org:
+      hibernate: DEBUG
+
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: gunho3987@gmail.com
+    password: kumk htzl gnyb phms
+    default-encoding: utf-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  datasource:
+    url: jdbc:mariadb://localhost:3306/HOMEPAGE  # 데이터베이스 URL
+    username: root                                  # 데이터베이스 사용자 이름
+    password: 12345
+    driver-class-name: org.mariadb.jdbc.Driver              # MariaDB 드라이버 클래스 이름
+  jpa:
+    hibernate:
+      ddl-auto: update                                      # 데이터베이스 스키마 자동 생성 전략 (none, update, create, create-drop 중 선택)
+    show-sql: true                                          # SQL 쿼리 로그 출력 여부
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+  # redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # kafka
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: producer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      concurrency: 1
+
+api:
+  alpha-vantage:
+    host: https://www.alphavantage.co
+    key : HJH2IIFUVUN8ZD0F

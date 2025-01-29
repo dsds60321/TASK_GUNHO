@@ -1,4 +1,4 @@
-package dev.gunho.global.dto;
+package dev.gunho.api.global.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class KafkaMessage {
+public class KafkaMessage<T> {
 
     private String requestId;
-    private String payload;
+    private T payload;
 
 }

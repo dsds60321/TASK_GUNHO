@@ -26,13 +26,40 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // REDIS
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    //	WEB-FLUX
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    implementation 'org.springframework.boot:spring-boot-starter-mail' // 이메일 전송 라이브러리
+
+    // 직렬화 & JSON 처리
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // WebSocket 지원
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // 맵스트럭트
+    implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+
+
+    //	REDIS
+    implementation 'org.springframework.integration:spring-integration-redis'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+clean {
+    delete file('src/main/generated')
 }
