@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StockSymbolDto {
+public class StockDto {
 
     private String symbol;
     @JsonProperty("country")
@@ -24,8 +24,12 @@ public class StockSymbolDto {
     private String name;
     @JsonProperty("sector")
     private String sector;
+    @JsonProperty("lastsale")
+    private String lastSale;
+    @JsonProperty("volume")
+    private String volume;
 
-    public StockSymbol mapToEntity(StockSymbolDto dto) {
+    public StockSymbol mapToEntity(StockDto dto) {
         Double marketCapValue = null;
         if (dto.getMarketCap() != null && !dto.getMarketCap().isEmpty()) {
             marketCapValue = Double.parseDouble(dto.getMarketCap().replaceAll(",", ""));

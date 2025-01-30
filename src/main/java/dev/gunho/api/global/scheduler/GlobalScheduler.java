@@ -5,15 +5,12 @@ import dev.gunho.api.email.service.EmailService;
 import dev.gunho.api.global.entity.Template;
 import dev.gunho.api.global.repository.TemplateRepository;
 import dev.gunho.api.global.service.RedisService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j

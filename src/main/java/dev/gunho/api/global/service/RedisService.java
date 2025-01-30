@@ -59,4 +59,14 @@ public class RedisService {
     public void deleteHashKey(String hashKey, Object key) {
         stringRedisTemplate.opsForHash().delete(hashKey, key);
     }
+
+    public boolean isHashKeyExists(String hashName, String key) {
+        return stringRedisTemplate.opsForHash().hasKey(hashName, key);
+    }
+
+    // Hash에 여러 필드-값 쌍 저장
+    public void addAllToHash(String hashKey, Map<String, Object> data) {
+        stringRedisTemplate.opsForHash().putAll(hashKey, data);
+    }
+
 }
