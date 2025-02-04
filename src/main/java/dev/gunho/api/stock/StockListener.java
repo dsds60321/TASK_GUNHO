@@ -1,7 +1,7 @@
 package dev.gunho.api.stock;
 
 import dev.gunho.api.global.service.RedisService;
-import dev.gunho.api.stock.constant.Stock;
+import dev.gunho.api.stock.constant.StockConstants;
 import dev.gunho.api.stock.service.StockService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class StockListener {
 
     @KafkaListener(topics = "top-topic", groupId = "stock-group")
     public void listen(String message) throws MessagingException {
-        List<String> stockSymbols = redisService.getRangeList(0, Stock.TOP_STOCK, Stock.STOCK_SYMBOL_LIST);
+        List<String> stockSymbols = redisService.getRangeList(0, StockConstants.TOP_STOCK, StockConstants.STOCK_SYMBOL_LIST);
         stockSymbols.forEach(stockSymbol -> stockService.dailyToJson(stockSymbol, true));
     }
 }

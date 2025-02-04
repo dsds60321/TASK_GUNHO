@@ -4,21 +4,31 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.gunho.api.global.constant.GlobalConstant;
 import dev.gunho.api.global.scheduler.GlobalScheduler;
 import dev.gunho.api.global.service.RedisService;
 import dev.gunho.api.global.service.WebClientService;
-import dev.gunho.api.stock.constant.Stock;
+import dev.gunho.api.stock.constant.StockConstants;
 import dev.gunho.api.stock.dto.StockDto;
+import dev.gunho.api.stock.entity.Stock;
 import dev.gunho.api.stock.entity.StockSymbol;
+import dev.gunho.api.stock.repository.StockRepository;
 import dev.gunho.api.stock.repository.StockSymbolBulkRepository;
 import dev.gunho.api.stock.repository.StockSymbolRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -38,8 +48,9 @@ public class StockService {
     private final ObjectMapper objectMapper;
     private final RedisService redisService;
     private final WebClientService webClientService;
-    private final StockSymbolRepository stockSymbolRepository;
     private final StockSymbolBulkRepository stockSymbolBulkRepository;
+    private final StockSymbolRepository stockSymbolRepository;
+    private final StockRepository stockRepository;
 
     private static final String NASDAQ_BASE = "https://api.nasdaq.com";
     private static final String SYMBOL_URI = "/api/screener/stocks";
@@ -51,7 +62,7 @@ public class StockService {
     @Transactional
     public void updateSymbol() {
         try {
-            List<String> topSymbols = redisService.getRangeList(0, Stock.TOP_STOCK, Stock.STOCK_SYMBOL_LIST);
+//            List<String> topSymbols = redisService.getRangeList(0, Stock.TOP_STOCK, Stock.STOCK_SYMBOL_LIST);
             // Nasdaq API URL 설정
             LinkedMultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
             queryParams.add("tableonly", "false");
@@ -93,12 +104,12 @@ public class StockService {
                         // REDIS 저장을 위해 데이터 가공 ==================================================
 
                         // SYMBOL_LIST
-                        redisService.addToListRight(Stock.STOCK_SYMBOL_LIST, stockDto.getSymbol());
+                        redisService.addToListRight(StockConstants.STOCK_SYMBOL_LIST, stockDto.getSymbol());
 
-                        // 특정 SYMBOL PRICE, VOLUME redis
-                        if (topSymbols.contains(stockDto.getSymbol())) {
-                            String dailyPriceRedisKey = String.format(Stock.STOCK_DAILY_PRICE_SYMBOL, stockDto.getSymbol());
-                            String dailyVolumeRedisKey = String.format(Stock.STOCK_DAILY_VOLUME_SYMBOL, stockDto.getSymbol());
+                        // 전체 SYMBOL PRICE, VOLUME redis
+//                        if (topSymbols.contains(stockDto.getSymbol())) {
+                            String dailyPriceRedisKey = String.format(StockConstants.STOCK_DAILY_PRICE_SYMBOL, stockDto.getSymbol());
+                            String dailyVolumeRedisKey = String.format(StockConstants.STOCK_DAILY_VOLUME_SYMBOL, stockDto.getSymbol());
                             String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
                             // 달러 표시 제거
@@ -114,7 +125,7 @@ public class StockService {
                             if (!redisService.isHashKeyExists(dailyVolumeRedisKey, currentDate)) {
                                 redisService.setHash(dailyVolumeRedisKey, currentDate, stockDto.getVolume());
                             }
-                        }
+//                        }
 
                     } catch (JsonProcessingException e) {
                         log.error("Failed to map stock data: {}", stockData, e);
@@ -136,12 +147,12 @@ public class StockService {
                     .collect(Collectors.toList());
 
             // **Redis 리스트 초기화 및 재저장**
-            redisService.delete(Stock.STOCK_SYMBOL_LIST); // 기존 Redis 리스트 삭제
-            redisService.delete(Stock.STOCK_SYMBOL_HASH); // 기존 Redis 리스트 삭제
+            redisService.delete(StockConstants.STOCK_SYMBOL_LIST); // 기존 Redis 리스트 삭제
+            redisService.delete(StockConstants.STOCK_SYMBOL_HASH); // 기존 Redis 리스트 삭제
 
             sortedStockDtos.forEach(stockDto -> {
-                redisService.addToListRight(Stock.STOCK_SYMBOL_LIST, stockDto.getSymbol());
-                redisService.setHash(Stock.STOCK_SYMBOL_HASH, stockDto.getSymbol(), stockDto.getName());
+                redisService.addToListRight(StockConstants.STOCK_SYMBOL_LIST, stockDto.getSymbol());
+                redisService.setHash(StockConstants.STOCK_SYMBOL_HASH, stockDto.getSymbol(), stockDto.getName());
             });
 
 
@@ -160,14 +171,14 @@ public class StockService {
         } catch (Exception e) {
             String errorMessage = "StockService.updateSymbol Error: " + e.getMessage();
             log.error(errorMessage, e);
-            redisService.setHash(GlobalScheduler.REDIS_ERROR_KEY, "StockService.updateSymbol 오류", errorMessage);
+            redisService.setHash(GlobalConstant.REDIS_ERROR_KEY, "StockService.updateSymbol 오류", errorMessage);
         }
 
     }
 
     // 매일 이전 주식 장 확인
     public void dailyToJson(String symbol, boolean isFull) {
-        String redisKey = String.format(Stock.STOCK_DAILY_JSON_SYMBOL, symbol);
+        String redisKey = String.format(StockConstants.STOCK_DAILY_JSON_SYMBOL, symbol);
         log.info("Stock Service Start: symbol={}, isFull={}", symbol, isFull);
 
         LinkedMultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
@@ -225,7 +236,7 @@ public class StockService {
     }
 
     public void annualProcessing(int TOP_STOCK) {
-        List<String> symbols = redisService.getRangeList(0, TOP_STOCK, Stock.STOCK_SYMBOL_LIST);
+        List<String> symbols = redisService.getRangeList(0, TOP_STOCK, StockConstants.STOCK_SYMBOL_LIST);
 
         symbols.forEach(symbol -> {
             // SYMBOL 년도별
@@ -255,12 +266,12 @@ public class StockService {
 
                 } catch (Exception e) {
                     String errorMessage = "StockService.annualProcessing Error: " + e.getMessage();
-                    redisService.setHash(GlobalScheduler.REDIS_ERROR_KEY, "StockService.annualProcessing 오류", errorMessage);
+                    redisService.setHash(GlobalConstant.REDIS_ERROR_KEY, "StockService.annualProcessing 오류", errorMessage);
                     log.error(errorMessage, e);
                 }
             });
 
-            String redisKey = String.format(Stock.STOCK_ANNUAL_PRICE_SYMBOL, symbol);
+            String redisKey = String.format(StockConstants.STOCK_ANNUAL_PRICE_SYMBOL, symbol);
             yearlyCloseValues.forEach((year, closeValues) -> {
                 double average = closeValues.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
                 try {
@@ -274,6 +285,67 @@ public class StockService {
 
         });
     }
+
+    /**
+     * 1분 간격 주식 크롤링
+     */
+    public void crawling() {
+        // 등록된 심볼에서만 1분 단위 시장가 조회
+        List<Stock> stocks = stockRepository.findAll();
+        stocks.forEach(stock -> {
+            String url = "https://finance.yahoo.com/quote/%s";
+            String symbol = stock.getSymbol();
+            url = String.format(url, symbol);
+            try {
+                // URL에 연결하여 HTML 문서 가져오기
+                Document document = Jsoup.connect(url)
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") // User-Agent 헤더 추가
+                        .timeout(5000) // 연결 timeout 설정 (5초)
+                        .get();
+
+                // qsp-pre-price 주식 시장 시작전
+                // qsp-price 주식 시장 시작
+                Element priceElement = document.selectFirst("[data-testid='qsp-pre-price']");
+                if (priceElement == null) {
+                    priceElement = document.selectFirst("[data-testid='qsp-price']");
+                }
+
+                if (priceElement != null) {
+                    String preMarketPrice = priceElement.text();
+                    String redisPriceKey = String.format(StockConstants.STOCK_DAILY_PRICE_SYMBOL, symbol);
+                    redisService.set(redisPriceKey, preMarketPrice);
+
+                    log.info("REDIS PRICE 추가 : {} : price : {}", symbol, preMarketPrice);
+                } else {
+                    log.info("{} 데이터를 찾을 수 없습니다.", symbol);
+                    redisService.setHash(GlobalConstant.REDIS_ERROR_KEY, "크롤링 파싱 실패", "크롤링 확인을 위해 해당 링크를 방문해주세요 : <a location.href='" + url + "'>" + url +"</a>" );
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("크롤링 중 오류 발생: " + e.getMessage());
+            }
+        });
+
+
+    }
+
+    /**
+     * 미국 주식시장이 열려있는지 확인하는 메서드
+     * @return boolean
+     */
+    private boolean isUsMarketOpen() {
+        // 미 동부 표준시 기준: 오전 9:30 - 오후 4:00
+        TimeZone estTimeZone = TimeZone.getTimeZone("America/New_York");
+        Calendar currentTime = Calendar.getInstance(estTimeZone);
+
+        int hour = currentTime.get(Calendar.HOUR_OF_DAY);
+        int minute = currentTime.get(Calendar.MINUTE);
+
+        // 주식 시장은 9:30 AM ~ 4:00 PM에 열림
+        return (hour > 9 || (hour == 9 && minute >= 30)) && hour < 16;
+    }
+
 
 
     /**

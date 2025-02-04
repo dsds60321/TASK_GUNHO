@@ -2,6 +2,7 @@ package dev.gunho.api.global.scheduler;
 
 import dev.gunho.api.email.dto.Email;
 import dev.gunho.api.email.service.EmailService;
+import dev.gunho.api.global.constant.GlobalConstant;
 import dev.gunho.api.global.entity.Template;
 import dev.gunho.api.global.repository.TemplateRepository;
 import dev.gunho.api.global.service.RedisService;
@@ -22,7 +23,6 @@ public class GlobalScheduler {
     private final EmailService emailService;
     private final RedisService redisService;
 
-    public static final String REDIS_ERROR_KEY = "LOG_ERROR";
 
 
     // 오류에 대한 메일 서비스
@@ -30,7 +30,7 @@ public class GlobalScheduler {
     public void errorLog() {
         try {
 
-            boolean existsByKey = redisService.existsByKey(REDIS_ERROR_KEY);
+            boolean existsByKey = redisService.existsByKey(GlobalConstant.REDIS_ERROR_KEY);
             if (!existsByKey) {
                 return;
             }
@@ -40,7 +40,7 @@ public class GlobalScheduler {
                     ? errorTemplate.getContent()
                     : "제목 : %s \n summary : %s";
 
-            Map<Object, Object> entries = redisService.getHashEntries(REDIS_ERROR_KEY);
+            Map<Object, Object> entries = redisService.getHashEntries(GlobalConstant.REDIS_ERROR_KEY);
             if (entries == null || entries.isEmpty()) {
                 log.info("No error logs found in Redis.");
                 return;
@@ -64,7 +64,7 @@ public class GlobalScheduler {
                     email.setContents(emailContent);
 
                     emailService.sendHtmlEmail(email);
-                    redisService.deleteHashKey(REDIS_ERROR_KEY, key);
+                    redisService.deleteHashKey(GlobalConstant.REDIS_ERROR_KEY, key);
                     log.info("Processed and removed key: {}", key);
 
                 } catch (Exception e) {

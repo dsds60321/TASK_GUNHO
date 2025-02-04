@@ -1,6 +1,6 @@
 package dev.gunho.api.stock.constant;
 
-public class Stock {
+public class StockConstants {
 
     public static final String STOCK_SYMBOL_LIST = "STOCK:SYMBOLS:LIST";
     public static final String STOCK_SYMBOL_HASH = "STOCK:SYMBOLS:HASH";

@@ -31,6 +31,9 @@ public class StockSymbol {
     @Column(name = "market_cap", precision = 20, scale = 2)
     private BigDecimal marketCap;
 
+    @Column(name = "last_sale", precision = 20, scale = 2)
+    private BigDecimal lastSale;
+
     private String country;
 
     private String name;

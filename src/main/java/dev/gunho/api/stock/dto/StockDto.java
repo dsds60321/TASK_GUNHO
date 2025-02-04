@@ -35,11 +35,17 @@ public class StockDto {
             marketCapValue = Double.parseDouble(dto.getMarketCap().replaceAll(",", ""));
         }
 
+        Double lastSaleValue = null;
+        if (dto.getLastSale() != null && !dto.getLastSale().isEmpty()) {
+            lastSaleValue = Double.parseDouble(dto.getLastSale().replaceAll(",", ""));
+        }
+
         return StockSymbol.builder()
                 .symbol(dto.getSymbol())
                 .country(dto.getCountry())
                 .industry(dto.getIndustry())
                 .marketCap(BigDecimal.valueOf(marketCapValue))
+                .lastSale(BigDecimal.valueOf(lastSaleValue))
                 .name(dto.getName())
                 .sector(dto.getSector())
                 .build();

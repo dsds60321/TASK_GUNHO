@@ -17,7 +17,7 @@ public class StockSymbolBulkRepository {
 
     @Transactional
     public void bulkInsert(List<StockSymbol> stockSymbols) {
-        String sql = "INSERT INTO stock_symbol (symbol, market_cap, name, country, sector, industry) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO stock_symbol (symbol, market_cap, name, country, sector, industry, last_sale) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.batchUpdate(sql, stockSymbols, 1000, (ps, stockSymbol) -> {
             ps.setString(1, stockSymbol.getSymbol());
@@ -26,6 +26,7 @@ public class StockSymbolBulkRepository {
             ps.setString(4, stockSymbol.getCountry());
             ps.setString(5, stockSymbol.getSector());
             ps.setString(6, stockSymbol.getIndustry());
+            ps.setObject(7, stockSymbol.getLastSale());
         });
     }
 
@@ -48,7 +49,10 @@ public class StockSymbolBulkRepository {
                 ELSE sector END,
             industry = CASE symbol 
                 %s 
-                ELSE industry END
+                ELSE industry END,
+            last_sale = CASE symbol 
+                %s 
+                ELSE last_sale END
         WHERE symbol IN (%s)
     """;
 
@@ -62,6 +66,7 @@ public class StockSymbolBulkRepository {
             String countryCase = generateCaseWhenClause(batchList, StockSymbol::getCountry);
             String sectorCase = generateCaseWhenClause(batchList, StockSymbol::getSector);
             String industryCase = generateCaseWhenClause(batchList, StockSymbol::getIndustry);
+            String lastSaleCase = generateCaseWhenClause(batchList, StockSymbol::getLastSale);
 
             // WHERE IN 절 생성
             String whereSymbols = batchList.stream()
@@ -69,7 +74,7 @@ public class StockSymbolBulkRepository {
                     .collect(Collectors.joining(", "));
 
             // 최종 SQL 생성
-            String formattedSql = String.format(sql, marketCapCase, nameCase, countryCase, sectorCase, industryCase, whereSymbols);
+            String formattedSql = String.format(sql, marketCapCase, nameCase, countryCase, sectorCase, industryCase, lastSaleCase, whereSymbols);
 
             // 쿼리 실행
             jdbcTemplate.update(formattedSql);

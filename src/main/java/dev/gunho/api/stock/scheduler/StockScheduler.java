@@ -1,7 +1,7 @@
 package dev.gunho.api.stock.scheduler;
 
 import dev.gunho.api.global.service.RedisService;
-import dev.gunho.api.stock.constant.Stock;
+import dev.gunho.api.stock.constant.StockConstants;
 import dev.gunho.api.stock.service.StockService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +29,11 @@ public class StockScheduler {
     }
 
     // 미국 주식 시장 종료 15분 후 실행 5시 15분 TOP 10 주식 레디스 설정
-    @PostConstruct
     @Scheduled(cron = "0 15 5 * * ?", zone = "Asia/Seoul")
+    @PostConstruct
     public void topStockCheck() {
         log.info("Stock End Check Start");
-        List<String> stockSymbols = redisService.getRangeList(0, Stock.TOP_STOCK, Stock.STOCK_SYMBOL_LIST);
+        List<String> stockSymbols = redisService.getRangeList(0, StockConstants.TOP_STOCK, StockConstants.STOCK_SYMBOL_LIST);
         stockSymbols.forEach(stockSymbol -> stockService.dailyToJson(stockSymbol, true));
     }
 
@@ -42,7 +42,12 @@ public class StockScheduler {
     @Scheduled(cron = "0 30 5 1 1 ?", zone = "Asia/Seoul")
     public void stockProcess() {
         // 연별 집계
-        stockService.annualProcessing(Stock.TOP_STOCK);
+        stockService.annualProcessing(StockConstants.TOP_STOCK);
     }
 
+    @PostConstruct
+    @Scheduled(cron = "0 */1 * * * *")
+    public void stockCrawling() {
+        stockService.crawling();
+    }
 }

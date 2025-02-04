@@ -42,6 +42,9 @@ dependencies {
     // WebSocket 지원
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+    // jsoup
+    implementation 'org.jsoup:jsoup:1.16.1'
+
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
