@@ -23,7 +23,7 @@ public class EmailService {
      */
     public void sendTextEmail(Email email) throws MessagingException {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email.getTo());                      // 수신자 이메일
+        message.setTo(email.getTo().toArray(new String[0]));                      // 수신자 이메일
         message.setSubject(email.getSubject());            // 이메일 제목
         message.setText(email.getContents());                  // 이메일 본문
         message.setFrom(email.getFrom()); // 발신자 이메일
@@ -36,7 +36,7 @@ public class EmailService {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
-        helper.setTo(email.getTo());                      // 수신자 이메일
+        helper.setTo(email.getTo().toArray(new String[0]));                      // 수신자 이메일
         helper.setSubject(email.getSubject());            // 이메일 제목
         helper.setText(email.getContents(), true);     // true: HTML 형식으로 내용 전송
         helper.setFrom(email.getFrom()); // 발신자 이메일

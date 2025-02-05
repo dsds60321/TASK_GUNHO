@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -48,7 +49,7 @@ public class GlobalScheduler {
 
             Email email = new Email();
             email.setSubject("[GUNHO.DEV] 오류 알림");
-            email.setTo("dsds60321@gmail.com");
+            email.setTo(List.of("dsds60321@gmail.com"));
             email.setFrom("dsds60321@gunho.dev");
 
             entries.forEach((key, value) -> {
