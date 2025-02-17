@@ -1,6 +1,10 @@
 package dev.gunho.api.global.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ReadOffset;
+import org.springframework.data.redis.connection.stream.RecordId;
+import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -68,5 +72,45 @@ public class RedisService {
     public void addAllToHash(String hashKey, Map<String, Object> data) {
         stringRedisTemplate.opsForHash().putAll(hashKey, data);
     }
+
+
+    /**
+     * Redis Stream에 데이터 저장
+     * @param streamKey Stream의 Key (채팅방 ID 등)
+     * @param messageData 메시지 데이터 (Map 형태로 전달)
+     * @return 저장된 RecordId
+     */
+    public RecordId saveToStream(String streamKey, Map<String, String> messageData) {
+        return stringRedisTemplate.opsForStream()
+                .add(MapRecord.create(streamKey, messageData));
+    }
+
+    /**
+     * Redis Stream에서 데이터 읽기
+     * @param streamKey Stream의 Key
+     * @param lastId 읽기를 시작할 ID (0-0 부터 시작하는 경우 모든 데이터, 또는 마지막 ID 이후 데이터를 읽음)
+     * @return 읽은 데이터 리스트
+     */
+    public List<MapRecord<String, Object, Object>> readFromStream(String streamKey, String lastId) {
+        return stringRedisTemplate.opsForStream()
+                .read(StreamOffset.create(streamKey, ReadOffset.from(lastId)));
+    }
+
+
+    /**
+     * Redis Stream 데이터 읽고 최신 메시지 ID 반환
+     * @param streamKey Stream의 Key
+     * @param lastId 읽기를 시작할 ID
+     * @return 최신 메시지 ID
+     */
+    public String readAndSaveLastReadId(String streamKey, String lastId) {
+        List<MapRecord<String, Object, Object>> records = readFromStream(streamKey, lastId);
+        if (!records.isEmpty()) {
+            // 마지막 메시지의 ID 저장
+            return records.get(records.size() - 1).getId().toString();
+        }
+        return lastId; // 데이터 없으면 lastId 반환
+    }
+
 
 }

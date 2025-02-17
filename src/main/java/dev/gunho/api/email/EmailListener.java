@@ -2,7 +2,7 @@ package dev.gunho.api.email;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.gunho.api.email.dto.Email;
+import dev.gunho.api.email.dto.EmailDto;
 import dev.gunho.api.email.service.EmailService;
 import dev.gunho.api.global.dto.KafkaMessage;
 import jakarta.mail.MessagingException;
@@ -22,11 +22,11 @@ public class EmailListener {
     @KafkaListener(topics = "email-topic", groupId = "producer-group")
     public void listen(String message) throws MessagingException {
         try {
-            KafkaMessage<Email> kafkaMessage = objectMapper.readValue(message, new TypeReference<KafkaMessage<Email>>() {});
-            Email email = kafkaMessage.getPayload();
+            KafkaMessage<EmailDto> kafkaMessage = objectMapper.readValue(message, new TypeReference<KafkaMessage<EmailDto>>() {});
+            EmailDto emailDto = kafkaMessage.getPayload();
 
-            emailService.sendHtmlEmail(email);
-            log.info("Email sent: {}", email);
+            emailService.sendHtmlEmail(emailDto);
+            log.info("Email sent: {}", emailDto);
         } catch (Exception e) {
             // 포괄적인 예외 처리
             System.err.println("알 수 없는 에러 발생: " + e.getMessage());

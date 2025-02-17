@@ -30,7 +30,7 @@ public class StockScheduler {
 
     // 미국 주식 시장 종료 15분 후 실행 5시 15분 TOP 10 주식 레디스 설정
     @Scheduled(cron = "0 15 5 * * ?", zone = "Asia/Seoul")
-//    @PostConstruct
+    @PostConstruct
     public void topStockCheck() {
         log.info("Stock End Check Start");
         List<String> stockSymbols = redisService.getRangeList(0, StockConstants.TOP_STOCK, StockConstants.STOCK_SYMBOL_LIST);
@@ -38,7 +38,7 @@ public class StockScheduler {
     }
 
     @Description("매년 미주 통계 집계")
-//    @PostConstruct
+    @PostConstruct
     @Scheduled(cron = "0 30 5 1 1 ?", zone = "Asia/Seoul")
     public void stockProcess() {
         // 연별 집계

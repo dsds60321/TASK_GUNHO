@@ -1,6 +1,6 @@
 package dev.gunho.api.global.scheduler;
 
-import dev.gunho.api.email.dto.Email;
+import dev.gunho.api.email.dto.EmailDto;
 import dev.gunho.api.email.service.EmailService;
 import dev.gunho.api.global.constant.GlobalConstant;
 import dev.gunho.api.global.entity.Template;
@@ -47,10 +47,10 @@ public class GlobalScheduler {
                 return;
             }
 
-            Email email = new Email();
-            email.setSubject("[GUNHO.DEV] 오류 알림");
-            email.setTo(List.of("dsds60321@gmail.com"));
-            email.setFrom("dsds60321@gunho.dev");
+            EmailDto emailDto = new EmailDto();
+            emailDto.setSubject("[GUNHO.DEV] 오류 알림");
+            emailDto.setTo(List.of("dsds60321@gmail.com"));
+            emailDto.setFrom("dsds60321@gunho.dev");
 
             entries.forEach((key, value) -> {
                 try {
@@ -62,9 +62,9 @@ public class GlobalScheduler {
                     String emailContent = content.replace("{title}", key.toString())
                             .replace("{content}", value.toString());
 
-                    email.setContents(emailContent);
+                    emailDto.setContents(emailContent);
 
-                    emailService.sendHtmlEmail(email);
+                    emailService.sendHtmlEmail(emailDto);
                     redisService.deleteHashKey(GlobalConstant.REDIS_ERROR_KEY, key);
                     log.info("Processed and removed key: {}", key);
 

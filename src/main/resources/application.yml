@@ -52,7 +52,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
-      concurrency: 1
+      concurrency: 3
 
 api:
   alpha-vantage:
